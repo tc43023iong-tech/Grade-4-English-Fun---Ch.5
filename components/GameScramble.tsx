@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { vocabList } from '../data';
 import { RefreshCcw, Check } from 'lucide-react';
 import { Vocabulary } from '../types';
@@ -10,8 +10,20 @@ const GameScramble: React.FC = () => {
   const [message, setMessage] = useState('');
   const [score, setScore] = useState(0);
 
+  // Deck management to prevent repeats
+  const deckRef = useRef<number[]>([]);
+
+  const getNextWord = () => {
+    if (deckRef.current.length === 0) {
+      // Create a new shuffled deck of IDs
+      deckRef.current = vocabList.map(v => v.id).sort(() => 0.5 - Math.random());
+    }
+    const nextId = deckRef.current.pop();
+    return vocabList.find(v => v.id === nextId)!;
+  };
+
   const nextWord = () => {
-    const randomWord = vocabList[Math.floor(Math.random() * vocabList.length)];
+    const randomWord = getNextWord();
     setCurrentWord(randomWord);
     setMessage('');
     setUserAnswer([]);

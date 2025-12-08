@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { vocabList } from '../data';
 import { Vocabulary } from '../types';
 import { PenTool, CheckCircle, XCircle } from 'lucide-react';
@@ -11,60 +11,51 @@ const GameFillBlank: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
 
-  const generateQuestion = () => {
-    // Pick a word that has a good example sentence
-    let randomWord: Vocabulary;
-    let parts: {prefix: string, suffix: string} | null = null;
-    let attempts = 0;
-
-    // Try to find a good question where the word exists in the example
-    do {
-      randomWord = vocabList[Math.floor(Math.random() * vocabList.length)];
-      
-      // Attempt to split the example sentence by the English phrase
-      // We use case-insensitive matching
-      const escapedWord = randomWord.english.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special chars
-      const regex = new RegExp(escapedWord, 'i');
-      const match = randomWord.example.match(regex);
-
-      if (match && match.index !== undefined) {
-        parts = {
-          prefix: randomWord.example.substring(0, match.index),
-          suffix: randomWord.example.substring(match.index + match[0].length)
-        };
-      } else {
-        // Fallback: If exact match failed (e.g. conjugation), try simple noun if it's a phrase "use X"
-        if (randomWord.english.startsWith("use ")) {
-            const noun = randomWord.english.substring(4);
-            const nounRegex = new RegExp(noun, 'i');
-            const nounMatch = randomWord.example.match(nounRegex);
-            if (nounMatch && nounMatch.index !== undefined) {
-                 parts = {
-                    prefix: randomWord.example.substring(0, nounMatch.index),
-                    suffix: randomWord.example.substring(nounMatch.index + nounMatch[0].length)
-                };
-                parts = null; // Simplification: ONLY use words where the EXACT phrase is found for now.
-            }
+  // Store valid items once
+  const [validItems] = useState(() => {
+    return vocabList.map(word => {
+        // Pre-calculate the match.
+        const escapedWord = word.english.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedWord, 'i');
+        const match = word.example.match(regex);
+        
+        if (match && match.index !== undefined) {
+             return {
+                 word: word,
+                 prefix: word.example.substring(0, match.index),
+                 suffix: word.example.substring(match.index + match[0].length)
+             }
         }
-      }
-      attempts++;
-    } while (!parts && attempts < 50);
+        return null;
+    }).filter(item => item !== null) as { word: Vocabulary, prefix: string, suffix: string }[];
+  });
 
-    if (!parts) return; // Should rarely happen given data
+  const deckRef = useRef<number[]>([]);
 
-    setQuestion(randomWord);
-    setSentenceParts(parts);
+  const generateQuestion = () => {
+    if (validItems.length === 0) return;
+
+    if (deckRef.current.length === 0) {
+        // Refill deck with indices of validItems
+        deckRef.current = validItems.map((_, index) => index).sort(() => 0.5 - Math.random());
+    }
+
+    const nextIndex = deckRef.current.pop()!;
+    const item = validItems[nextIndex];
+    
+    setQuestion(item.word);
+    setSentenceParts({ prefix: item.prefix, suffix: item.suffix });
     setSelectedOption(null);
     setIsCorrect(null);
 
     // Generate distractors
     const distractors = vocabList
-      .filter(w => w.id !== randomWord.id)
+      .filter(w => w.id !== item.word.id)
       .sort(() => 0.5 - Math.random())
       .slice(0, 3)
       .map(w => w.english);
     
-    const allOptions = [...distractors, randomWord.english].sort(() => 0.5 - Math.random());
+    const allOptions = [...distractors, item.word.english].sort(() => 0.5 - Math.random());
     setOptions(allOptions);
   };
 

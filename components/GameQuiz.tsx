@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { vocabList } from '../data';
 import { Vocabulary } from '../types';
 import { HelpCircle, CheckCircle, XCircle } from 'lucide-react';
@@ -10,8 +10,18 @@ const GameQuiz: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
 
+  // Deck to prevent repeats
+  const deckRef = useRef<Vocabulary[]>([]);
+
+  const getNextWord = () => {
+    if (deckRef.current.length === 0) {
+      deckRef.current = [...vocabList].sort(() => 0.5 - Math.random());
+    }
+    return deckRef.current.pop()!;
+  };
+
   const generateQuestion = () => {
-    const randomWord = vocabList[Math.floor(Math.random() * vocabList.length)];
+    const randomWord = getNextWord();
     setQuestion(randomWord);
     setSelectedOption(null);
     setIsCorrect(null);

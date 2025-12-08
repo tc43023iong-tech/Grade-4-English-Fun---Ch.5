@@ -5,7 +5,8 @@ import GameScramble from './components/GameScramble';
 import GameQuiz from './components/GameQuiz';
 import GameBubble from './components/GameBubble';
 import GameFillBlank from './components/GameFillBlank';
-import { Puzzle, Type, Zap, PenTool } from 'lucide-react';
+import GameEmoji from './components/GameEmoji';
+import { Puzzle, Type, Zap, PenTool, Smile } from 'lucide-react';
 import { GameType } from './types';
 
 const App: React.FC = () => {
@@ -13,7 +14,7 @@ const App: React.FC = () => {
   const [activeGame, setActiveGame] = useState<GameType | null>(null);
 
   const renderGameMenu = () => (
-    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 animate-fade-in max-w-4xl mx-auto">
+    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in max-w-5xl mx-auto">
       <div className="col-span-full text-center mb-4">
         <h2 className="text-3xl font-display font-bold text-purple-600">Game Zone!</h2>
         <p className="text-slate-500">Choose a game to practice your new words.</p>
@@ -48,7 +49,15 @@ const App: React.FC = () => {
           <PenTool size={28} />
         </div>
         <h3 className="text-xl font-bold text-slate-700">Sentence Builder</h3>
-        <p className="text-slate-400 text-sm">Complete the sentence with the right word.</p>
+        <p className="text-slate-400 text-sm">Complete the sentence.</p>
+      </button>
+
+      <button onClick={() => setActiveGame('emoji')} className="bg-white p-6 rounded-3xl shadow-lg border-b-4 border-yellow-200 hover:border-yellow-400 hover:-translate-y-1 transition group text-left">
+        <div className="w-12 h-12 bg-yellow-100 text-yellow-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
+          <Smile size={28} />
+        </div>
+        <h3 className="text-xl font-bold text-slate-700">Emoji Detector</h3>
+        <p className="text-slate-400 text-sm">Guess the word from the picture.</p>
       </button>
     </div>
   );
@@ -68,6 +77,7 @@ const App: React.FC = () => {
         {activeGame === 'quiz' && <GameQuiz />}
         {activeGame === 'bubble' && <GameBubble />}
         {activeGame === 'fill-blank' && <GameFillBlank />}
+        {activeGame === 'emoji' && <GameEmoji />}
       </div>
     );
   };

@@ -20,14 +20,24 @@ const GameBubble: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastSpawnTime = useRef<number>(0);
 
-  // Helper to get a random word, but bias towards the target if it exists
+  // Bag for random selection to ensure coverage before repeat
+  const bubbleBagRef = useRef<Vocabulary[]>([]);
+
+  const getNextFromBag = () => {
+    if (bubbleBagRef.current.length === 0) {
+      bubbleBagRef.current = [...vocabList].sort(() => 0.5 - Math.random());
+    }
+    return bubbleBagRef.current.pop()!;
+  };
+
+  // Helper to get a word to spawn. 
   const getWordToSpawn = (currentTarget: Vocabulary | null): Vocabulary => {
     // 40% chance to spawn the target word if it's set
     if (currentTarget && Math.random() < 0.4) {
       return currentTarget;
     }
-    // Otherwise random word
-    return vocabList[Math.floor(Math.random() * vocabList.length)];
+    // Otherwise pull from bag
+    return getNextFromBag();
   };
 
   const spawnBubble = (currentTarget: Vocabulary | null) => {
@@ -41,7 +51,7 @@ const GameBubble: React.FC = () => {
         word: word,
         x: Math.random() * 80 + 10, // 10% to 90% width
         y: 110, // Start below screen
-        // Faster speed: 0.2 to 0.5 percent per frame (approx 3-8 seconds to cross)
+        // Faster speed: 0.2 to 0.5 percent per frame
         speed: Math.random() * 0.3 + 0.2 
       }
     ]);
@@ -76,6 +86,7 @@ const GameBubble: React.FC = () => {
   useEffect(() => {
     if (isPlaying) {
       if (!target) {
+        // Initial target
         const newTarget = vocabList[Math.floor(Math.random() * vocabList.length)];
         setTarget(newTarget);
         targetRef.current = newTarget;
@@ -94,8 +105,13 @@ const GameBubble: React.FC = () => {
 
     if (bubble.word.id === target.id) {
       setScore(s => s + 10);
-      // Change target
-      const newTarget = vocabList[Math.floor(Math.random() * vocabList.length)];
+      // Change target - pick random but different from current if possible
+      let newTarget = vocabList[Math.floor(Math.random() * vocabList.length)];
+      if (vocabList.length > 1) {
+          while(newTarget.id === target.id) {
+            newTarget = vocabList[Math.floor(Math.random() * vocabList.length)];
+          }
+      }
       setTarget(newTarget);
       // Remove clicked bubble
       setBubbles(prev => prev.filter(b => b.id !== bubble.id));

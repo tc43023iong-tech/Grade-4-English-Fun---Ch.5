@@ -8,7 +8,7 @@ export interface Vocabulary {
   emoji?: string;
 }
 
-export type GameType = 'study' | 'scramble' | 'quiz' | 'bubble' | 'fill-blank';
+export type GameType = 'study' | 'scramble' | 'quiz' | 'bubble' | 'fill-blank' | 'emoji';
 
 export interface GameState {
   score: number;
